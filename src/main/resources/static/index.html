@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+</head>
+<body>
+
+<h2>HTML Table</h2>
+
+<table id="shipsList">
+</table>
+<br/>
+<br/>
+
+<p id="search">
+</p>
+
+<form onsubmit="return false">
+    <input id="ship_name" placeholder="ship name">
+    <input id="ship_speed_1" placeholder="ship speed 1">
+    <input id="ship_speed_2" placeholder="ship speed 2">
+    <input id="ship_speed_3" placeholder="ship speed 3">
+    <button onclick="createShip()">Create ship</button>
+</form>
+
+<input id="search_field">
+<button onclick="searchByName()">Search by Name</button>
+<script>
+    function searchByName() {
+        var name = document.getElementById("search_field").value;
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var ship = JSON.parse(this.responseText);
+                var html = '<h1>' + ship.name + ' ' + ship.speed1 + ' ' + ship.speed2 + ' ' + ship.speed3 + '</h1>'
+
+                document.getElementById("search").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8080/ships/findByName?name=" + name, true);
+        xhttp.send();
+    }
+
+    function deleteShip(shipId) {
+        var xhttp = new XMLHttpRequest();
+        window.location.reload();
+        xhttp.open("GET", "http://localhost:8080/ships/delete/" + shipId, true);
+        xhttp.send();
+    }
+
+    function createShip() {
+        var shipName = document.getElementById("ship_name").value;
+        var shipSpeed1 = document.getElementById("ship_speed_1").value;
+        var shipSpeed2 = document.getElementById("ship_speed_2").value;
+        var shipSpeed3 = document.getElementById("ship_speed_3").value;
+        window.location.reload();
+        var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance
+        xmlhttp.open("POST", "http://localhost:8080/ships/save");
+        xmlhttp.setRequestHeader("Content-Type", "application/json");
+        xmlhttp.send(JSON.stringify({name: shipName, speed1: shipSpeed1, speed2: shipSpeed2, speed3: shipSpeed3}));
+
+        loadShips();
+    }
+
+    function loadShips() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                var ships = JSON.parse(this.responseText);
+                var html = '<tr>\n' +
+                    '        <th>ship id</th>\n' +
+                    '        <th>ship name</th>\n' +
+                    '        <th>ship speed 1</th>\n' +
+                    '        <th>ship speed 2</th>\n' +
+                    '        <th>ship speed 3</th>\n' +
+                    '        <th>Delete</th>\n' +
+                    '    </tr>';
+                for (var i = 0; i < ships.length; i++) {
+                    var ship = ships[i];
+                    html = html + '<tr><td>' + ship.id + '</td>\n' +
+                        '        <td>' + ship.name + '</td>\n' +
+                        '        <td>' + ship.speed1 + '</td>\n' +
+                        '        <td>' + ship.speed2 + '</td>\n' +
+                        '        <td>' + ship.speed3 + '</td>\n' +
+                        '        <td><button onclick="deleteShip(' + ship.id + ')">Delete</button></td></tr>';
+
+                }
+                document.getElementById("shipsList").innerHTML = html;
+            }
+        };
+        xhttp.open("GET", "http://localhost:8080/ships/findAll", true);
+        xhttp.send();
+    }
+
+    loadShips();
+
+</script>
+</body>
+</html>
